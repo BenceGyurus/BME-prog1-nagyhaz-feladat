@@ -20,9 +20,11 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v3
 
-      # Set up CMake for the appropriate platform
-      - name: Setup CMake
-        uses: lukka/get-cmake@v3
+      # Set up CMake
+      - name: Set up CMake
+        uses: actions/setup-cmake@v3
+        with:
+          cmake-version: '3.22.0' # Specify your desired version or omit for latest
 
       # Install GCC or equivalent compiler (Linux only)
       - name: Install dependencies (Linux)
