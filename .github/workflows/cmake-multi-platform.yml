@@ -1,0 +1,48 @@
+name: CMake Multi-Platform Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      # Checkout the repository
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      # Set up CMake
+      - name: Set up CMake
+        uses: jwlawson/actions-setup-cmake@v1
+        with:
+          cmake-version: '3.22.0' # Specify your desired version or omit for latest
+
+      # Install GCC or equivalent compiler (Linux only)
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y build-essential
+
+      # Configure the build
+      - name: Configure with CMake
+        run: cmake -S . -B build
+
+      # Build the project
+      - name: Build with CMake
+        run: cmake --build build
+
+      # Run the executable (if supported on the platform)
+      - name: Test the executable
+        run: |
+          if [[ "${{ runner.os }}" != "Windows" ]]; then
+            ./build/morse
+          else
+            .\build\morse.exe
