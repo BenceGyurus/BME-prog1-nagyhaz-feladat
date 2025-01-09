@@ -24,7 +24,7 @@ jobs:
       - name: Set up CMake
         uses: jwlawson/actions-setup-cmake@v1
         with:
-          cmake-version: '3.22.0' # Specify your desired version or omit for latest
+          cmake-version: '3.22.0'
 
       # Install GCC or equivalent compiler (Linux only)
       - name: Install dependencies (Linux)
@@ -42,7 +42,8 @@ jobs:
       # Run the executable (if supported on the platform)
       - name: Test the executable
         run: |
-          if [[ "${{ runner.os }}" != "Windows" ]]; then
+          if [[ "${{ matrix.os }}" != "windows-latest" ]]; then
             ./build/morse
           else
             .\build\morse.exe
+          fi
