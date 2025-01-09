@@ -43,7 +43,7 @@ jobs:
       - name: Test the executable
         run: |
           if [[ "${{ matrix.os }}" != "windows-latest" ]]; then
-            ./build/morse
+            ./build/morse -d ".- .-.. .-.. ---"
           else
-            .\build\morse.exe
+            .\build\morse.exe -d ".- .-.. .-.. ---"
           fi
