@@ -48,15 +48,16 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           if (Test-Path -Path build/Release/morse.exe) {
-          Compress-Archive -Path build/Release/morse.exe -DestinationPath build/morse-windows.zip
+            Compress-Archive -Path build/Release/morse.exe -DestinationPath build/morse-windows.zip
           } else {
-          Write-Error "morse.exe not found in build/Release/ directory!"
+            Write-Error "morse.exe not found in build/Release/ directory!"
           }
         shell: pwsh
     
       - name: Package for macOS
         if: runner.os == 'macOS'
         run: |
+          echo "Listing build directory contents for macOS"
           ls build || echo "Build directory is empty!"
           test -f build/morse || (echo "morse binary not found!" && exit 1)
           zip -j build/morse-macos.zip build/morse || (echo "Failed to package for macOS" && exit 1)
@@ -64,6 +65,7 @@ jobs:
       - name: Package for Linux
         if: runner.os == 'Linux'
         run: |
+          echo "Listing build directory contents for Linux"
           ls build || echo "Build directory is empty!"
           test -f build/morse || (echo "morse binary not found!" && exit 1)
           tar -czvf build/morse-linux.tar.gz -C build morse
@@ -77,6 +79,11 @@ jobs:
             build/morse-windows.zip
             build/morse-macos.zip
             build/morse-linux.tar.gz
+      - name: List build directory contents (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          Get-ChildItem -Recurse build/
+        shell: pwsh
 
   release:
     needs: build
@@ -111,6 +118,14 @@ jobs:
           prerelease: false
 
       # Upload the release assets
+      - name: Upload Windows Asset
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: build/morse-windows.zip
+          asset_name: morse-windows.zip
+          asset_content_type: application/zip
+
       - name: Upload macOS Asset
         uses: actions/upload-release-asset@v1
         with:
