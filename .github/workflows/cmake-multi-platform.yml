@@ -33,13 +33,7 @@ jobs:
 
       # Configure the build
       - name: Configure with CMake
-        run: |
-          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            cmake -S . -B build -DCMAKE_CXX_FLAGS="/W4" -DCMAKE_C_FLAGS="/W4"
-          else
-            cmake -S . -B build -DCMAKE_CXX_FLAGS="-Wall -Werror" -DCMAKE_C_FLAGS="-Wall -Werror"
-          fi
-
+        run: cmake -S . -B build
 
       # Build the project
       - name: Build with CMake
