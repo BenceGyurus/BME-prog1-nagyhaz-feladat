@@ -43,29 +43,29 @@ jobs:
       - name: Package for Windows
         if: runner.os == 'Windows'
         run: |
-          echo "Checking if morse.exe exists..."
           if (Test-Path -Path build/Release/morse.exe) {
             Compress-Archive -Path build/Release/morse.exe -DestinationPath build/morse-windows.zip
-            if (Test-Path -Path build/morse-windows.zip) {
-              Write-Host "morse-windows.zip successfully created."
-            } else {
-              Write-Error "morse-windows.zip creation failed!"
-              exit 1
-            }
           } else {
             Write-Error "morse.exe not found in build/Release/ directory!"
             exit 1
           }
         shell: pwsh
-
+    
       - name: Package for macOS
         if: runner.os == 'macOS'
         run: |
+          echo "Checking if morse executable exists..."
           if [ -f build/morse ]; then
+            echo "morse executable found. Proceeding to create zip file..."
             zip -j build/morse-macos.zip build/morse
-            echo "morse-macos.zip successfully created."
+            if [ -f build/morse-macos.zip ]; then
+              echo "morse-macos.zip successfully created."
+            else
+              echo "Error: morse-macos.zip creation failed!" >&2
+              exit 1
+            fi
           else
-            echo "Error: morse executable not found!" >&2
+            echo "Error: morse executable not found in build directory!" >&2
             exit 1
           fi
 
@@ -74,27 +74,26 @@ jobs:
         run: |
           if [ -f build/morse ]; then
             tar -czvf build/morse-linux.tar.gz -C build morse
-            echo "morse-linux.tar.gz successfully created."
           else
-            echo "Error: morse executable not found!" >&2
+            echo "Error: morse executable not found in build directory!" >&2
             exit 1
           fi
+     
+      # List build directory contents
+      - name: List Build Directory Contents
+        run: |
+          echo "Listing build directory contents:"
+          ls -R build/
 
       # Upload the artifact
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: morse-${{ matrix.os }}
+          name: morse-${{ runner.os }}
           path: |
             build/morse-windows.zip
             build/morse-macos.zip
             build/morse-linux.tar.gz
-
-      # Debug build directory contents
-      - name: List Build Directory
-        run: |
-          echo "Listing contents of the build directory:"
-          ls -R build/
 
   release:
     needs: build
@@ -105,7 +104,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v3
 
-      # Download the build artifacts
+      # Download the build artifact
       - name: Download Build Artifacts
         uses: actions/download-artifact@v3
         with:
@@ -120,7 +119,7 @@ jobs:
         with:
           tag_name: v${{ github.run_number }}
           release_name: "Release v${{ github.run_number }}"
-          body: "Release of Morse application."
+          body: "Release of morse"
           draft: false
           prerelease: false
 
@@ -130,22 +129,24 @@ jobs:
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./build/morse-windows.zip
+          asset_path: build/morse-windows.zip
           asset_name: morse-windows.zip
           asset_content_type: application/zip
 
       - name: Upload macOS Asset
+        if: runner.os == 'macOS'
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./build/morse-macos.zip
+          asset_path: build/morse-macos.zip
           asset_name: morse-macos.zip
           asset_content_type: application/zip
 
       - name: Upload Linux Asset
+        if: runner.os == 'Linux'
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./build/morse-linux.tar.gz
+          asset_path: build/morse-linux.tar.gz
           asset_name: morse-linux.tar.gz
           asset_content_type: application/gzip
