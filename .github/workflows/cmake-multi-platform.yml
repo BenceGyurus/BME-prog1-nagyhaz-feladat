@@ -7,6 +7,7 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch: # Allow manual triggering of the workflow
 
 jobs:
   build:
@@ -37,27 +38,76 @@ jobs:
 
       # Build the project
       - name: Build with CMake
-        run: cmake --build build --config Debug
+        run: cmake --build build --config Release
 
-      # Debug: List output directories
-      - name: List directories
-        if: runner.os == 'Windows'
+      # Package the artifact for release
+      - name: Package the artifact
         run: |
-          dir build
-          dir build\Debug
+          if [ "${{ matrix.os }}" == "windows-latest" ]; then
+            zip -j build/morse-windows.zip build/Release/morse.exe
+          elif [ "${{ matrix.os }}" == "macos-latest" ]; then
+            zip -j build/morse-macos.zip build/morse
+          else
+            tar -czvf build/morse-linux.tar.gz -C build morse
 
-      # Test executable on Linux and macOS
-      - name: Test executable on Linux/macOS
-        if: runner.os != 'Windows'
-        run: ./build/morse -d ".- .-.. .-.. ---"
+      # Upload artifact for later use
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: morse-${{ matrix.os }}
+          path: |
+            build/morse-windows.zip
+            build/morse-macos.zip
+            build/morse-linux.tar.gz
 
-      # Test executable on Windows
-      - name: Test executable on Windows
-        if: runner.os == 'Windows'
-        run: |
-          if (Test-Path .\build\Debug\morse.exe) {
-            .\build\Debug\morse.exe -d ".- .-.. .-.. ---"
-          } else {
-            echo "morse.exe not found in build\Debug"
-            exit 1
-          }
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      # Download build artifacts from all platforms
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: build
+
+      # Create a GitHub release
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: v${{ github.run_number }}
+          release_name: "Release v${{ github.run_number }}"
+          body: |
+            This release contains the latest builds for all platforms.
+          draft: false
+          prerelease: false
+
+      # Upload release assets
+      - name: Upload Windows Asset
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: build/morse-windows.zip
+          asset_name: morse-windows.zip
+          asset_content_type: application/zip
+
+      - name: Upload macOS Asset
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: build/morse-macos.zip
+          asset_name: morse-macos.zip
+          asset_content_type: application/zip
+
+      - name: Upload Linux Asset
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: build/morse-linux.tar.gz
+          asset_name: morse-linux.tar.gz
+          asset_content_type: application/gzip
