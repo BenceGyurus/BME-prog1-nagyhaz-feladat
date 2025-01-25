@@ -41,19 +41,19 @@ jobs:
 
       # Package the artifact for release (OS specific)
             # Package the artifact for release (OS specific)
-      - name: Package the artifact
+      - name: Package for Windows
+        if: runner.os == 'Windows'
         run: |
-          if [ "${{ runner.os }}" == "Windows" ]; then
-            # Windows packaging
-            Compress-Archive -Path build/Release/morse.exe -DestinationPath build/morse-windows.zip
-          elif [ "${{ runner.os }}" == "macOS" ]; then
-            # macOS packaging
-            zip -j build/morse-macos.zip build/morse
-          elif [ "${{ runner.os }}" == "Linux" ]; then
-            # Linux packaging
-            tar -czvf build/morse-linux.tar.gz -C build morse
-          fi
-        shell: bash
+          Compress-Archive -Path build/Release/morse.exe -DestinationPath build/morse-windows.zip
+        shell: pwsh
+    
+      - name: Package for macOS
+        if: runner.os == 'macOS'
+        run: zip -j build/morse-macos.zip build/morse
+    
+      - name: Package for Linux
+        if: runner.os == 'Linux'
+        run: tar -czvf build/morse-linux.tar.gz -C build morse
     
 
       # Upload the artifact
