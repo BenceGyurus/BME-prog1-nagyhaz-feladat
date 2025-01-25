@@ -7,7 +7,6 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch:
 
 jobs:
   build:
@@ -27,7 +26,7 @@ jobs:
         with:
           cmake-version: '3.22.0'
 
-      # Install dependencies for Linux (Ubuntu)
+      # Install dependencies for Linux
       - name: Install dependencies (Linux)
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y build-essential
@@ -40,22 +39,25 @@ jobs:
       - name: Build with CMake
         run: cmake --build build --config Release
 
-      # Package the artifact for release
+      # Package the artifact for release (OS specific)
       - name: Package the artifact
         run: |
-          if [ "${{ matrix.os }}" == "windows-latest" ]; then
+          if [ "${{ runner.os }}" == "windows-latest" ]; then
+            # Windows packaging
             zip -j build/morse-windows.zip build/Release/morse.exe
-          elif [ "${{ matrix.os }}" == "macos-latest" ]; then
+          elif [ "${{ runner.os }}" == "macos-latest" ]; then
+            # macOS packaging
             zip -j build/morse-macos.zip build/morse
-          elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+          elif [ "${{ runner.os }}" == "ubuntu-latest" ]; then
+            # Linux packaging
             tar -czvf build/morse-linux.tar.gz -C build morse
           fi
 
-      # Upload artifact for later use
+      # Upload the artifact
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: morse-${{ matrix.os }}
+          name: morse-${{ runner.os }}
           path: |
             build/morse-windows.zip
             build/morse-macos.zip
@@ -70,25 +72,24 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v3
 
-      # Download build artifacts from all platforms
+      # Download the build artifact
       - name: Download Build Artifacts
         uses: actions/download-artifact@v3
         with:
           path: build
 
-      # Create a GitHub release
+      # Create GitHub Release
       - name: Create GitHub Release
         id: create_release
         uses: actions/create-release@v1
         with:
           tag_name: v${{ github.run_number }}
           release_name: "Release v${{ github.run_number }}"
-          body: |
-            This release contains the latest builds for all platforms.
+          body: "Release of morse"
           draft: false
           prerelease: false
 
-      # Upload release assets
+      # Upload the release assets
       - name: Upload Windows Asset
         uses: actions/upload-release-asset@v1
         with:
