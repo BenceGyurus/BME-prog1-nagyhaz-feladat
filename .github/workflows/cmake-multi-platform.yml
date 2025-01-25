@@ -39,6 +39,12 @@ jobs:
       - name: Build with CMake
         run: cmake --build build --config Release
 
+      # Debug: List build directory contents
+      - name: List Build Directory Contents
+        run: |
+          echo "Listing build directory contents:"
+          ls -R build/
+
       # Package the artifact for release (OS specific)
       - name: Package for Windows
         if: runner.os == 'Windows'
@@ -66,21 +72,15 @@ jobs:
         run: |
           if [ -f build/morse ]; then
             tar -czvf build/morse-linux.tar.gz -C build morse
-            if [ -f build/morse-linux.tar.gz ]; then
-              echo "morse-linux.tar.gz successfully created."
-            else
-              echo "Error: morse-linux.tar.gz creation failed!" >&2
-              exit 1
-            fi
           else
             echo "Error: morse executable not found in build directory!" >&2
             exit 1
           fi
 
-      # List build directory contents
-      - name: List Build Directory Contents
+      # List contents again after packaging
+      - name: List Build Directory After Packaging
         run: |
-          echo "Listing build directory contents:"
+          echo "Listing build directory after packaging:"
           ls -R build/
 
       # Upload the artifact
