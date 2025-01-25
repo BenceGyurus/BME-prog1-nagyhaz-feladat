@@ -40,39 +40,42 @@ jobs:
         run: cmake --build build --config Release
 
       # Debugging: List the build directory after building
-      - name: List build directory contents
+      - name: List build directory
         run: ls -R build
 
-      # Package the artifact for release (OS specific)
+      # Package the artifact for release (Windows)
       - name: Package for Windows
         if: runner.os == 'Windows'
         run: |
-          # Check if morse.exe exists
+          echo "Checking if morse.exe exists..."
           if (Test-Path -Path build/Release/morse.exe) {
             Write-Host "morse.exe found. Creating morse-windows.zip."
             Compress-Archive -Path build/Release/morse.exe -DestinationPath build/morse-windows.zip
-            Write-Host "Successfully created morse-windows.zip"
+            Write-Host "Successfully created morse-windows.zip."
           } else {
             Write-Error "morse.exe not found in build/Release/ directory!"
+            exit 1
           }
         shell: pwsh
     
+      # Package the artifact for release (macOS)
       - name: Package for macOS
         if: runner.os == 'macOS'
         run: |
-          echo "Listing build directory contents for macOS"
+          echo "Checking if morse binary exists..."
           ls build || echo "Build directory is empty!"
           test -f build/morse || (echo "morse binary not found!" && exit 1)
           zip -j build/morse-macos.zip build/morse || (echo "Failed to package for macOS" && exit 1)
 
+      # Package the artifact for release (Linux)
       - name: Package for Linux
         if: runner.os == 'Linux'
         run: |
-          echo "Listing build directory contents for Linux"
+          echo "Checking if morse binary exists..."
           ls build || echo "Build directory is empty!"
           test -f build/morse || (echo "morse binary not found!" && exit 1)
           tar -czvf build/morse-linux.tar.gz -C build morse
-     
+
       # Upload the artifact
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v3
@@ -82,11 +85,12 @@ jobs:
             build/morse-windows.zip
             build/morse-macos.zip
             build/morse-linux.tar.gz
-      - name: List build directory contents (Windows)
-        if: runner.os == 'Windows'
+
+      # Debugging: List all build directory contents
+      - name: List build directory contents (Debugging)
         run: |
-          Get-ChildItem -Recurse build/
-        shell: pwsh
+          echo "Build directory contents:"
+          ls -R build/
 
   release:
     needs: build
