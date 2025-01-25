@@ -56,7 +56,7 @@ jobs:
             exit 1
           }
         shell: pwsh
-    
+  
       - name: Package for macOS
         if: runner.os == 'macOS'
         run: |
@@ -122,8 +122,14 @@ jobs:
           prerelease: false
 
       # Upload the release assets
-      - name: Upload Windows Asset
+      - name: Verify and Upload Windows Asset
         if: runner.os == 'Windows'
+        run: |
+          if [ ! -f build/morse-windows.zip ]; then
+            echo "Error: build/morse-windows.zip does not exist!" >&2
+            ls -R build/
+            exit 1
+          fi
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
@@ -131,8 +137,14 @@ jobs:
           asset_name: morse-windows.zip
           asset_content_type: application/zip
 
-      - name: Upload macOS Asset
+      - name: Verify and Upload macOS Asset
         if: runner.os == 'macOS'
+        run: |
+          if [ ! -f build/morse-macos.zip ]; then
+            echo "Error: build/morse-macos.zip does not exist!" >&2
+            ls -R build/
+            exit 1
+          fi
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
@@ -140,8 +152,14 @@ jobs:
           asset_name: morse-macos.zip
           asset_content_type: application/zip
 
-      - name: Upload Linux Asset
+      - name: Verify and Upload Linux Asset
         if: runner.os == 'Linux'
+        run: |
+          if [ ! -f build/morse-linux.tar.gz ]; then
+            echo "Error: build/morse-linux.tar.gz does not exist!" >&2
+            ls -R build/
+            exit 1
+          fi
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
