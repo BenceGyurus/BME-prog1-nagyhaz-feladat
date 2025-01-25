@@ -47,4 +47,4 @@ jobs:
       # Test executable on Windows
       - name: Test executable on Windows
         if: runner.os == 'Windows'
-        run: build\morse.exe -d ".- .-.. .-.. ---"
+        run: .\build\morse.exe -d ".- .-.. .-.. ---"
