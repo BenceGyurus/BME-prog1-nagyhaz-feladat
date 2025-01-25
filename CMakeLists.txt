@@ -8,3 +8,5 @@ file(GLOB SOURCES "*.c")
 
 # Add the executable
 add_executable(morse ${SOURCES})
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})

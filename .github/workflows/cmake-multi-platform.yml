@@ -44,7 +44,15 @@ jobs:
         if: runner.os != 'Windows'
         run: ./build/morse -d ".- .-.. .-.. ---"
 
-      # Test executable on Windows
+      - name: List build directory
+        run: dir build
+
       - name: Test executable on Windows
         if: runner.os == 'Windows'
-        run: .\build\morse.exe -d ".- .-.. .-.. ---"
+        run: |
+          if (Test-Path .\build\morse.exe) {
+            .\build\morse.exe -d ".- .-.. .-.. ---"
+          } else {
+            echo "morse.exe not found in build directory"
+            exit 1
+          }
