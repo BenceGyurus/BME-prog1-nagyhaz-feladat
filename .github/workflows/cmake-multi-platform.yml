@@ -53,7 +53,7 @@ jobs:
       - name: Package for Linux
         if: runner.os == 'Linux'
         run: tar -czvf build/morse-linux.tar.gz -C build morse
-
+     
       # Upload the artifact
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v3
@@ -81,6 +81,9 @@ jobs:
 
       # Create GitHub Release
       - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref_name }}
         id: create_release
         uses: actions/create-release@v1
         with:
@@ -89,6 +92,7 @@ jobs:
           body: "Release of morse"
           draft: false
           prerelease: false
+      
 
       # Upload the release assets
       - name: Upload Windows Asset
