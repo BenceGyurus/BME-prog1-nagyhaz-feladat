@@ -39,11 +39,12 @@ jobs:
       - name: Build with CMake
         run: cmake --build build
 
-      # Run the executable (if supported on the platform)
-      - name: Test the executable
-        run: |
-          if [[ "${{ matrix.os }}" != "windows-latest" ]]; then
-            ./build/morse -d ".- .-.. .-.. ---"
-          else
-            .\build\morse.exe -d ".- .-.. .-.. ---"
-          fi
+      # Test executable on Linux and macOS
+      - name: Test executable on Linux/macOS
+        if: runner.os != 'Windows'
+        run: ./build/morse -d ".- .-.. .-.. ---"
+
+      # Test executable on Windows
+      - name: Test executable on Windows
+        if: runner.os == 'Windows'
+        run: .\build\morse.exe -d ".- .-.. .-.. ---"
