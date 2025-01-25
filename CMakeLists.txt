@@ -9,5 +9,11 @@ file(GLOB SOURCES "*.c")
 # Add the executable
 add_executable(morse ${SOURCES})
 
-# Set compiler flags
-target_compile_options(morse PRIVATE -Wall -Werror)
+if(MSVC)
+    # Use /W4 for high warning levels in MSVC (or any preferred level)
+    target_compile_options(${PROJECT_NAME} PRIVATE /W4)
+else()
+    # For GCC/Clang, use -Wall -Werror
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Werror)
+endif()
+
