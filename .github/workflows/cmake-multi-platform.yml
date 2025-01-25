@@ -47,8 +47,11 @@ jobs:
       - name: Package for Windows
         if: runner.os == 'Windows'
         run: |
+          # Check if morse.exe exists
           if (Test-Path -Path build/Release/morse.exe) {
+            Write-Host "morse.exe found. Creating morse-windows.zip."
             Compress-Archive -Path build/Release/morse.exe -DestinationPath build/morse-windows.zip
+            Write-Host "Successfully created morse-windows.zip"
           } else {
             Write-Error "morse.exe not found in build/Release/ directory!"
           }
