@@ -43,7 +43,11 @@ jobs:
       - name: Package for Windows
         if: runner.os == 'Windows'
         run: |
-          Compress-Archive -Path build/Release/morse.exe -DestinationPath build/morse-windows.zip
+          if (Test-Path -Path build/Release/morse.exe) {
+            Compress-Archive -Path build/Release/morse.exe -DestinationPath build/morse-windows.zip
+          } else {
+            Write-Error "morse.exe not found!"
+          }
         shell: pwsh
     
       - name: Package for macOS
@@ -54,6 +58,13 @@ jobs:
         if: runner.os == 'Linux'
         run: tar -czvf build/morse-linux.tar.gz -C build morse
      
+      # Verify the artifact files
+      - name: Verify artifact files
+        run: |
+          ls build/
+          ls build/Release/
+        shell: bash
+
       # Upload the artifact
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v3
@@ -79,6 +90,10 @@ jobs:
         with:
           path: build
 
+      # Verify downloaded artifact files
+      - name: Verify downloaded artifact files
+        run: ls build/
+      
       # Create GitHub Release
       - name: Create GitHub Release
         env:
@@ -92,10 +107,10 @@ jobs:
           body: "Release of morse"
           draft: false
           prerelease: false
-      
 
       # Upload the release assets
       - name: Upload Windows Asset
+        if: runner.os == 'Windows'
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
@@ -104,6 +119,7 @@ jobs:
           asset_content_type: application/zip
 
       - name: Upload macOS Asset
+        if: runner.os == 'macOS'
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
@@ -112,6 +128,7 @@ jobs:
           asset_content_type: application/zip
 
       - name: Upload Linux Asset
+        if: runner.os == 'Linux'
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
