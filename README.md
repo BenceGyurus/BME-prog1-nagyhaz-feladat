@@ -71,4 +71,3 @@ Enkódolni (e) vagy dekódolni (d) szeretne? Kilépés: /e [e/d]: d
 Írja be a dekódolandó morze kódot >>Hello világ
 A dekódolandó szöveg nem tartalmazhat a szóköztől, '.'-tól '-'-től és '/'-től különböző karaktert.
 ```
-# BME-prog1-nagy-h-zi---Morze
