@@ -54,16 +54,8 @@ jobs:
       - name: Package for macOS
         if: runner.os == 'macOS'
         run: |
-          echo "Checking if morse executable exists..."
           if [ -f build/morse ]; then
-            echo "morse executable found. Proceeding to create zip file..."
             zip -j build/morse-macos.zip build/morse
-            if [ -f build/morse-macos.zip ]; then
-              echo "morse-macos.zip successfully created."
-            else
-              echo "Error: morse-macos.zip creation failed!" >&2
-              exit 1
-            fi
           else
             echo "Error: morse executable not found in build directory!" >&2
             exit 1
@@ -74,11 +66,17 @@ jobs:
         run: |
           if [ -f build/morse ]; then
             tar -czvf build/morse-linux.tar.gz -C build morse
+            if [ -f build/morse-linux.tar.gz ]; then
+              echo "morse-linux.tar.gz successfully created."
+            else
+              echo "Error: morse-linux.tar.gz creation failed!" >&2
+              exit 1
+            fi
           else
             echo "Error: morse executable not found in build directory!" >&2
             exit 1
           fi
-     
+
       # List build directory contents
       - name: List Build Directory Contents
         run: |
