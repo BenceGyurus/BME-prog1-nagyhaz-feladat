@@ -39,57 +39,61 @@ jobs:
       - name: Build with CMake
         run: cmake --build build --config Release
 
-      # Debugging: List the build directory after building
-      - name: List build directory
-        run: ls -R build
-
-      # Package the artifact for release (Windows)
+      # Package the artifact for release (OS specific)
       - name: Package for Windows
         if: runner.os == 'Windows'
         run: |
           echo "Checking if morse.exe exists..."
           if (Test-Path -Path build/Release/morse.exe) {
-            Write-Host "morse.exe found. Creating morse-windows.zip."
             Compress-Archive -Path build/Release/morse.exe -DestinationPath build/morse-windows.zip
-            Write-Host "Successfully created morse-windows.zip."
+            if (Test-Path -Path build/morse-windows.zip) {
+              Write-Host "morse-windows.zip successfully created."
+            } else {
+              Write-Error "morse-windows.zip creation failed!"
+              exit 1
+            }
           } else {
             Write-Error "morse.exe not found in build/Release/ directory!"
             exit 1
           }
         shell: pwsh
-    
-      # Package the artifact for release (macOS)
+
       - name: Package for macOS
         if: runner.os == 'macOS'
         run: |
-          echo "Checking if morse binary exists..."
-          ls build || echo "Build directory is empty!"
-          test -f build/morse || (echo "morse binary not found!" && exit 1)
-          zip -j build/morse-macos.zip build/morse || (echo "Failed to package for macOS" && exit 1)
+          if [ -f build/morse ]; then
+            zip -j build/morse-macos.zip build/morse
+            echo "morse-macos.zip successfully created."
+          else
+            echo "Error: morse executable not found!" >&2
+            exit 1
+          fi
 
-      # Package the artifact for release (Linux)
       - name: Package for Linux
         if: runner.os == 'Linux'
         run: |
-          echo "Checking if morse binary exists..."
-          ls build || echo "Build directory is empty!"
-          test -f build/morse || (echo "morse binary not found!" && exit 1)
-          tar -czvf build/morse-linux.tar.gz -C build morse
+          if [ -f build/morse ]; then
+            tar -czvf build/morse-linux.tar.gz -C build morse
+            echo "morse-linux.tar.gz successfully created."
+          else
+            echo "Error: morse executable not found!" >&2
+            exit 1
+          fi
 
       # Upload the artifact
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: morse-${{ runner.os }}
+          name: morse-${{ matrix.os }}
           path: |
             build/morse-windows.zip
             build/morse-macos.zip
             build/morse-linux.tar.gz
 
-      # Debugging: List all build directory contents
-      - name: List build directory contents (Debugging)
+      # Debug build directory contents
+      - name: List Build Directory
         run: |
-          echo "Build directory contents:"
+          echo "Listing contents of the build directory:"
           ls -R build/
 
   release:
@@ -101,15 +105,11 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v3
 
-      # Download the build artifact
+      # Download the build artifacts
       - name: Download Build Artifacts
         uses: actions/download-artifact@v3
         with:
           path: build
-
-      # Debugging: List downloaded artifacts
-      - name: List downloaded artifacts
-        run: ls -R build
 
       # Create GitHub Release
       - name: Create GitHub Release
@@ -120,16 +120,17 @@ jobs:
         with:
           tag_name: v${{ github.run_number }}
           release_name: "Release v${{ github.run_number }}"
-          body: "Release of morse"
+          body: "Release of Morse application."
           draft: false
           prerelease: false
 
       # Upload the release assets
       - name: Upload Windows Asset
+        if: runner.os == 'Windows'
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: build/morse-windows.zip
+          asset_path: ./build/morse-windows.zip
           asset_name: morse-windows.zip
           asset_content_type: application/zip
 
@@ -137,7 +138,7 @@ jobs:
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: build/morse-macos.zip
+          asset_path: ./build/morse-macos.zip
           asset_name: morse-macos.zip
           asset_content_type: application/zip
 
@@ -145,6 +146,6 @@ jobs:
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: build/morse-linux.tar.gz
+          asset_path: ./build/morse-linux.tar.gz
           asset_name: morse-linux.tar.gz
           asset_content_type: application/gzip
