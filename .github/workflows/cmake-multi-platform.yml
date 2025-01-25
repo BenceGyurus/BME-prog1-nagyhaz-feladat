@@ -47,8 +47,9 @@ jobs:
             zip -j build/morse-windows.zip build/Release/morse.exe
           elif [ "${{ matrix.os }}" == "macos-latest" ]; then
             zip -j build/morse-macos.zip build/morse
-          else
+          elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
             tar -czvf build/morse-linux.tar.gz -C build morse
+          fi
 
       # Upload artifact for later use
       - name: Upload Build Artifact
